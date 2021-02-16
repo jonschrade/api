@@ -1,0 +1,2 @@
+#Welcome to SchradeAdventures API!#
+
