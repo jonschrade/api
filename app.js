@@ -2,7 +2,7 @@ const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const schema = require('./schema/schema');
 const mongoose = require('mongoose');
-
+const path = require('path');
 const app = express();
 
 if (app.get('env') === 'development') {

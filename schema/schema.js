@@ -7,11 +7,6 @@ const User = require('../models/user');
 
 const { GraphQLSchema, GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } = graphql;
 
-// dummy data
-var users = [
-    { id: '1' , firstName: 'Jonathan', lastName: 'Schrade', email: 'jonathan.schrade@gmail.com' }
-];
-
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -22,7 +17,7 @@ const UserType = new GraphQLObjectType({
         projects: {
             type: new GraphQLList(ProjectType),
             resolve(parent, args) {
-                //return  _.filter(projects, ({users}) => { return users.includes(parent.id) });
+                return Project.find(({ users }) => { return users.includes(parent.id); });
             }
         }
     })
@@ -36,13 +31,13 @@ const ProjectType = new GraphQLObjectType({
         users: { 
             type: new GraphQLList(UserType),
             resolve(parent, args){
-                //return  _.filter(users, ({id}) => {return parent.users.includes(id)});
+                return User.find(({ id }) => { return parent.users.includes(id); });
             }
         },
         tasks: {
             type: new GraphQLList(TaskType),
             resolve(parent, args) {
-                //return _.filter(tasks, { projectId: parent.id });
+                return User.find({ projectId: parent.id });
             }
         },
     })
@@ -57,13 +52,13 @@ const TaskType = new GraphQLObjectType({
         project: { 
             type: ProjectType,
             resolve(parent, args){
-                //return _.find(projects, { id: parent.projectId });
+                return Project.findById(parent.projectId);
             }
         },
         labels: {
             type: new GraphQLList(LabelType),
             resolve(parent, args) {
-                //return  _.filter(labels, ({id}) => { return parent.labels.includes(id) });
+                return Label.find(({ id }) => { return parent.labels.includes(id); });
             }
         }
     })
@@ -77,7 +72,7 @@ const LabelType = new GraphQLObjectType({
         tasks: {
             type: new GraphQLList(TaskType),
             resolve(parent, args) {
-                //return _.filter(tasks, ({labels}) => { return labels.includes(parent.id) })
+                return Task.find(({ labels }) => { return labels.includes(parent.id); });
             }
         }
     })
@@ -90,52 +85,52 @@ const RootQuery = new GraphQLObjectType({
             type: UserType,
             args: { id: { type: GraphQLID } },
             resolve(parent, args) {
-                //return _.find(users, { id: args.id });
+                return User.findById(args.id);
             }
         },
         project: {
             type: ProjectType,
             args: { id: { type: GraphQLID } },
             resolve(parent, args) {
-                //return _.find(projects, { id: args.id });
+                return Project.findById(args.id);
             }
         },
         task: {
             type: TaskType,
             args: { id: { type: GraphQLID } },
             resolve(parent, args) {
-                //return _.find(tasks, { id: args.id });
+                return Task.findById(args.id);
             }
         },
         label: {
             type: LabelType,
             args: { id: { type: GraphQLID } },
             resolve(parent, args) {
-                //return _.find(labels, { id: args.id });
+                return Label.findById(args.id);
             }
         },
         users: {
             type: new GraphQLList(UserType),
             resolve(parent, args) {
-                //return users;
+                return User.find({});
             }
         },
         projects: {
             type: new GraphQLList(ProjectType),
             resolve(parent, args) {
-                //return projects;
+                return Project.find({});
             }
         },
         tasks: {
             type: new GraphQLList(TaskType),
             resolve(parent, args) {
-                //return tasks;
+                return Task.find({});
             }
         },
         labels: {
             type: new GraphQLList(LabelType),
             resolve(parent, args) {
-                //return labels;
+                return Label.find({});
             }
         }
     }
@@ -149,7 +144,7 @@ const Mutation = new GraphQLObjectType({
             args: { 
                 firstName : { type: GraphQLString },
                 lastName : { type: GraphQLString },
-                email : { type: GraphQLString }
+                email : { type: GraphQLString, required: [true, 'Please enter an email'] }
             },
             resolve(parent, args) {
                 let newUser = new User({
@@ -157,30 +152,30 @@ const Mutation = new GraphQLObjectType({
                     lastName: args.lastName,
                     email: args.email
                 });
-                newUser.save();
+                return newUser.save();
             }
         },
         addProject: {
             type: ProjectType,
             args:  { 
-                name : { type: GraphQLString },
-                users : { type: new GraphQLList(GraphQLString) }
+                name : { type: GraphQLString, required: [true, 'Please enter a name for the Project'] },
+                users : { type: new GraphQLList(GraphQLID), required: [true, 'Project must have at least one User'] }
             },
             resolve(parent, args) {
                 let newProject = new Project({
                     name: args.name,
                     users: args.users
                 });
-                newProject.save();
+                return newProject.save();
             }
         },
         addTask: {
             type: TaskType,
             args: { 
-                title : { type: GraphQLString },
+                title : { type: GraphQLString, required: [true, 'Please enter a title for the Task'] },
                 description : { type: GraphQLString },
-                projectId: { type: GraphQLID },
-                labels: { type: GraphQLList(GraphQLString) }
+                projectId: { type: GraphQLID, required: [true, 'Task must be linked to a Project'] },
+                labels: { type: GraphQLList(GraphQLID) }
             },
             resolve(parent, args) {
                 let newTask = new Task({
@@ -189,19 +184,19 @@ const Mutation = new GraphQLObjectType({
                     projectId: args.projectId,
                     labels: args.labels
                 });
-                newTask.save();
+                return newTask.save();
             }
         },
         addLabel: {
             type: LabelType,
             args: { 
-                name : { type: GraphQLString }
+                name : { type: GraphQLString, required: [true, 'Please enter a name for the Label'] }
             },
             resolve(parent, args) {
                 let newLabel = new Label({
                     name: args.name
                 });
-                newLabel.save();
+                return newLabel.save();
             }
         }
     }
