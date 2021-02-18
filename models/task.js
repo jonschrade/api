@@ -4,9 +4,12 @@ const Schema = mongoose.Schema;
 const taskSchema = new Schema({
     title: String,
     description: String,
-    projectId: String,
+    projectId: Schema.Types.ObjectId,
     status: Boolean,
-    labels: Array
+    labels: [{
+        type: Schema.Types.ObjectId,
+        ref: "Label"
+      }]
 });
 
 module.exports = mongoose.model('Task', taskSchema);

@@ -17,7 +17,7 @@ const UserType = new GraphQLObjectType({
         projects: {
             type: new GraphQLList(ProjectType),
             resolve(parent, args) {
-                return Project.find(({ users }) => { return users.includes(parent.id); });
+                return Project.find({users: parent._id });
             }
         }
     })
@@ -31,13 +31,13 @@ const ProjectType = new GraphQLObjectType({
         users: { 
             type: new GraphQLList(UserType),
             resolve(parent, args){
-                return User.find(({ id }) => { return parent.users.includes(id); });
+                return User.find({ _id: { $in: parent.users } });
             }
         },
         tasks: {
             type: new GraphQLList(TaskType),
             resolve(parent, args) {
-                return User.find({ projectId: parent.id });
+                return Task.find({ projectId: parent._id });
             }
         },
     })
@@ -58,7 +58,7 @@ const TaskType = new GraphQLObjectType({
         labels: {
             type: new GraphQLList(LabelType),
             resolve(parent, args) {
-                return Label.find(({ id }) => { return parent.labels.includes(id); });
+                return Label.find({ _id: { $in: parent.labels } });
             }
         }
     })
@@ -72,7 +72,7 @@ const LabelType = new GraphQLObjectType({
         tasks: {
             type: new GraphQLList(TaskType),
             resolve(parent, args) {
-                return Task.find(({ labels }) => { return labels.includes(parent.id); });
+                return Task.find({ labels: parent._id });
             }
         }
     })
